@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-bypass
 PKG_VERSION:=1.2
-PKG_RELEASE:=63
+PKG_RELEASE:=65
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -32,7 +32,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Simple_obfs
 config PACKAGE_$(PKG_NAME)_INCLUDE_Simple_obfs_server
 	bool "Include Shadowsocks Simple-obfs-server Plugin"
 	depends on PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Server
-	default y
+	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_plugin
 	bool "Include Shadowsocks V2ray Plugin"
@@ -94,8 +94,6 @@ define Package/$(PKG_NAME)
 endef
 
 define Build/Prepare
-	$(foreach po,$(wildcard ${CURDIR}/po/zh-cn/*.po), \
-		po2lmo $(po) $(PKG_BUILD_DIR)/$(patsubst %.po,%.lmo,$(notdir $(po)));)
 	chmod +x root/etc/init.d/bypass root/usr/share/bypass/* >/dev/null 2>&1
 endef
 
@@ -117,7 +115,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/
 	cp -pR ./root/* $(1)/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bypass.*.lmo $(1)/usr/lib/lua/luci/i18n/
+	po2lmo ./po/zh-cn/bypass.po $(1)/usr/lib/lua/luci/i18n/bypass.zh-cn.lmo
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

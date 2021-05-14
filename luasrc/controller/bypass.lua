@@ -1,7 +1,6 @@
 module("luci.controller.bypass",package.seeall)
 local http = require "luci.http"
 local api = require "luci.model.cbi.bypass.api"
-local kcptun = require "luci.model.cbi.bypass.kcptun"
 local xray = require "luci.model.cbi.bypass.xray"
 local trojan_go = require "luci.model.cbi.bypass.trojan_go"
 function index()
@@ -27,8 +26,6 @@ function index()
 	entry({"admin","services","bypass","checkport"},call("check_port"))
 	entry({"admin","services","bypass","run"},call("act_status"))
 	entry({"admin","services","bypass","ping"},call("act_ping"))
-	entry({"admin", "services", "bypass", "kcptun_check"}, call("kcptun_check")).leaf = true
-	entry({"admin", "services", "bypass", "kcptun_update"}, call("kcptun_update")).leaf = true
 	entry({"admin", "services", "bypass", "xray_check"}, call("xray_check")).leaf = true
 	entry({"admin", "services", "bypass", "xray_update"}, call("xray_update")).leaf = true
 	entry({"admin", "services", "bypass", "v2ray_check"}, call("v2ray_check")).leaf = true
@@ -187,25 +184,6 @@ local function http_write_json(content)
 	http.write_json(content or {code = 1})
 end
 
-function kcptun_check()
-	local json = kcptun.to_check("")
-	http_write_json(json)
-end
-
-function kcptun_update()
-	local json = nil
-	local task = http.formvalue("task")
-	if task == "extract" then
-		json = kcptun.to_extract(http.formvalue("file"), http.formvalue("subfix"))
-	elseif task == "move" then
-		json = kcptun.to_move(http.formvalue("file"))
-	else
-		json = kcptun.to_download(http.formvalue("url"))
-	end
-
-	http_write_json(json)
-end
-
 function xray_check()
 	local json = xray.to_check("")
 	http_write_json(json)
@@ -298,7 +276,7 @@ end
 
 function status()
 	local e = {}
-	e.dns_mode_status = luci.sys.call("pidof smartdns >/dev/null") == 0
+	e.dns_mode_status = luci.sys.call("pidof smartdns-le >/dev/null") == 0
 	e.socks5_status = luci.sys.call("ps -w | grep by- | grep socks5 | grep -v grep >/dev/null") == 0
 	e.tcp_node_status = luci.sys.call("ps -w | grep by-retcp | grep -v grep >/dev/null") == 0
 	e.udp_node_status = luci.sys.call("ps -w | grep by-reudp | grep -v grep >/dev/null") == 0
